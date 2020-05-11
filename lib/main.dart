@@ -32,10 +32,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void set1(int ind, String k) {
-    if(k==''){
-      nums[ind]=0;
-    }else{
-      nums[ind]=int.parse(k);
+    if (k == '') {
+      nums[ind] = 0;
+    } else {
+      nums[ind] = int.parse(k);
     }
   }
 
@@ -221,37 +221,45 @@ class _MyHomePageState extends State<MyHomePage> {
     return true;
   }
 
-  bool solve(int ind) {
-    print(ind);
-    if(ind==81){
+  Future<bool> solve(int ind) async {
+    if (ind == 81) {
       return true;
     }
-    if(nums[ind]!=0){
-      if(solve(ind+1)){
+    if (nums[ind] != 0) {
+      bool v = await solve(ind + 1);
+      if (v) {
         return true;
-      }else{
+      } else {
         return false;
       }
     }
-    for(int i=1;i<=9;i++){
-      if(isSafe(ind,i)){
+    for (int i = 1; i <= 9; i++) {
+      setState(() {
+        controllers[ind].text = i.toString();
+      });
+      bool v = isSafe(ind, i);
+      if (v) {
         setState(() {
-          nums[ind]=i;
-          controllers[ind].text=nums[ind].toString();
+          nums[ind] = i;
+          controllers[ind].text = nums[ind].toString();
         });
-        if(solve(ind+1)){
+        if (await solve(ind + 1)) {
           return true;
-        }else{
+        } else {
           setState(() {
-            nums[ind]=0;
-            controllers[ind].text='';
+            nums[ind] = 0;
+            controllers[ind].text = '';
           });
-          return false;
         }
       }
     }
+    setState(() {
+      controllers[ind].text = '';
+    });
+    
     return false;
   }
+
   void reset() {
     //print(nums);
     setState(() {
@@ -262,11 +270,24 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Future<void> solving() async{
+    bool v=await solve(0);
+    if(v==false){
+      print(v);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sudoku Solver'),
+        title: Text(
+          'Sudoku Solver',
+          style: TextStyle(
+              color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       backgroundColor: Color.alphaBlend(
         Color.fromRGBO(255, 192, 203, 3),
@@ -278,16 +299,16 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Container(
               //color: Colors.blue,
-              padding: EdgeInsets.only(
-                top: 20,
-                left: 5,
-                right: 5,
+              padding: EdgeInsets.all(
+               10
               ),
-              height: 400,
-              width: double.infinity,
+             
+              height: 500,
+              
+              //width: double.infinity,
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 9),
+                    childAspectRatio: 1 / 1, crossAxisCount: 9),
                 itemBuilder: (_, ind) => Card(
                   child: TextFormField(
                     //focusNode: focusNode,
@@ -304,7 +325,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             RaisedButton.icon(
               color: Colors.white,
-              onPressed:(){ bool v = solve(0); print(nums);},
+              onPressed: () {
+                return solving();
+              },
               icon: Icon(Icons.play_arrow),
               label: Text('Solve!'),
             ),
